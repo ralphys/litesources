@@ -1,0 +1,459 @@
+#! /bin/bash
+#--------------------------------------------------------------------------------------------------------
+# Name: Lite Sources Select
+# Description: Select a Repository Source on Linux Lite.
+# Authors:  Jerry Bezencon
+# Website: https://www.linuxliteos.com
+#--------------------------------------------------------------------------------------------------------
+
+# Ensure multi-language support
+export LANG=C
+
+# Kill off any package managers that may be running
+if [ "$(pidof synaptic)" ] 
+then
+   sudo killall -9 synaptic
+fi
+
+if [ ! -z "$(pgrep gdebi-gtk)" ]
+then
+   killall -9 gdebi-gtk
+fi
+
+############################################################################################################################################################
+
+: <<'END'
+
+# Check Internet access
+if eval "sudo -u ${SUDO_USER:-$USER} curl -sk google.com" >> /dev/null 2>&1; then
+  : # pass
+ else # Prompt ERROR internet connection
+	notify-send -t 8000 "Cannot proceed" "Your computer is not connected to the Internet."
+    (zenity --info --width=320 --height=120 --ok-label="Got it!" --title="         Lite Sources - No Internet connection detected..." \
+            --text="\n<b>Your computer does not seem to be connected to the internet</b> \n \nLite Sources cannot proceed. \nPlease check your Internet connection and try again." --no-wrap)
+        exit 0
+fi
+
+END
+
+############################################################################################################################################################
+
+# Set the window icon variable
+ic="/usr/share/icons/zenity-llcc.png"
+
+# Lite Sources Titlebar
+LS="Lite Sources"
+
+# Set app icon variable
+#APPICON=/usr/share/litesources/flags/
+APPICON=/home/jerry/repo/citrine/litesources_2.0-0010-linuxlite/usr/share/litesources/flags/
+
+# Set the Title bar variable
+lss="Lite Source Selector"
+
+# APT folder location
+#APT=/etc/apt
+APT=/home/jerry/repo/citrine/litesources_2.0-0010-linuxlite/etc/apt
+
+# Location of Country sources.list files
+#LOC=/etc/apt/litesources/countries/
+LOC=/home/jerry/repo/citrine/litesources_2.0-0010-linuxlite/etc/apt/litesources/countries/
+
+# Download message variable
+cs="Changing Repository Source"
+
+############################################################################################################################################################
+
+: <<'END'
+
+# Update package list
+zenity --question --title="$lss" --window-icon="$ic" --text="We will now fetch the Updates list.\n\nClick Yes to continue or No to abort."
+   if [ "$?" -eq "0" ];then
+
+    APTUPDATE=$(grep '^deb' -c /etc/apt/sources.list) # Total of repositories registered, this is approximated
+    sudo apt-get update 2>&1 | awk -v total=$APTUPDATE '/^Ign|^ Get/{count++;$1=""} FNR { if (total != 0){percentage=int (100*count/total);print (percentage < 90?percentage:90),"\n#",substr($0, 0, 128) }; fflush(stdout)}' \
+      | zenity --progress --text="Updating package lists..." --window-icon=$ic --title="Updating Software Sources - please wait..." --percentage=0 --auto-close --width=600
+
+                                if [ "${PIPESTATUS[0]}" -ne "0" ]; then
+
+                                        unset APTUPDATE
+                                        zenity --error \
+                                        --title="Error" --text="$lss couldn't fetch the package cache information lists."
+
+                                        exit 1
+                                fi
+unset APTUPDATE
+
+END
+
+############################################################################################################################################################
+
+# 78 Country Sources
+
+CHSOURCE=$(zenity --title="$LS" \
+--ok-label="Change Source" \
+--height=500 --width="280" \
+--list --imagelist --text "Select a location near you and click on Change Source:\n" \
+--column "  Select  " --column " Location" \
+"$APPICON/Argentina.png" " Argentina" \
+"$APPICON/Armenia.png" " Armenia" \
+"$APPICON/Australia.png" " Australia" \
+"$APPICON/Australia.png" " Australia (Adelaide)" \
+"$APPICON/Australia.png" " Australia (Perth)" \
+"$APPICON/Australia.png" " Australia (Sydney)" \
+"$APPICON/Azerbaijan.png" " Azerbaijan" \
+"$APPICON/Belarus.png" " Belarus" \
+"$APPICON/Belgium.png" " Belgium" \
+"$APPICON/Bosnia & Herzegovina.png" " Bosnia & Herzegovina" \
+"$APPICON/Brazil.png" " Brazil" \
+"$APPICON/Bulgaria.png" " Bulgaria" \
+"$APPICON/Canada.png" " Canada" \
+"$APPICON/Canada.png" " Canada (Ontario)" \
+"$APPICON/Canada.png" " Canada (Quebec)" \
+"$APPICON/Chile.png" " Chile" \
+"$APPICON/China.png" " China" \
+"$APPICON/Colombia.png" " Colombia" \
+"$APPICON/Costa Rica.png" " Costa Rica" \
+"$APPICON/Croatia.png" " Croatia" \
+"$APPICON/Czech Republic.png" " Czech Republic" \
+"$APPICON/Denmark.png" " Denmark" \
+"$APPICON/Ecuador.png" " Ecuador" \
+"$APPICON/Estonia.png" " Estonia" \
+"$APPICON/Finland.png" " Finland" \
+"$APPICON/France.png" " France" \
+"$APPICON/French Polynesia.png" " French Polynesia" \
+"$APPICON/Georgia.png" " Georgia" \
+"$APPICON/Germany.png" " Germany" \
+"$APPICON/Greece.png" " Greece" \
+"$APPICON/Greenland.png" " Greenland" \
+"$APPICON/Hong Kong.png" " Hong Kong" \
+"$APPICON/Hungary.png" " Hungary" \
+"$APPICON/Iceland.png" " Iceland" \
+"$APPICON/India.png" " India" \
+"$APPICON/Indonesia.png" " Indonesia" \
+"$APPICON/Iran.png" " Iran" \
+"$APPICON/Ireland.png" " Ireland" \
+"$APPICON/Israel.png" " Israel" \
+"$APPICON/Italy.png" " Italy" \
+"$APPICON/Japan.png" " Japan" \
+"$APPICON/Kazakhstan.png" " Kazakhstan" \
+"$APPICON/Kenya.png" " Kenya" \
+"$APPICON/South Korea.png" " Korea, South" \
+"$APPICON/Latvia.png" " Latvia" \
+"$APPICON/Lithuania.png" " Lithuania" \
+"$APPICON/Luxembourg.png" " Luxembourg" \
+"$APPICON/Macedonia.png" " Macedonia" \
+"$APPICON/Malaysia.png" " Malaysia" \
+"$APPICON/Moldova.png" " Moldova" \
+"$APPICON/Nepal.png" " Nepal" \
+"$APPICON/Netherlands.png" " Netherlands" \
+"$APPICON/New Caledonia.png" " New Caledonia" \
+"$APPICON/New Zealand.png" " New Zealand" \
+"$APPICON/Norway.png" " Norway" \
+"$APPICON/Oman.png" " Oman" \
+"$APPICON/Pakistan.png" " Pakistan" \
+"$APPICON/Philippines.png" " Philippines" \
+"$APPICON/Poland.png" " Poland" \
+"$APPICON/Portugal.png" " Portugal" \
+"$APPICON/Romania.png" " Romania" \
+"$APPICON/Russian Federation.png" " Russian Federation" \
+"$APPICON/Singapore.png" " Singapore" \
+"$APPICON/Slovakia.png" " Slovakia" \
+"$APPICON/Slovenia.png" " Slovenia" \
+"$APPICON/South Africa.png" " South Africa" \
+"$APPICON/Spain.png" " Spain" \
+"$APPICON/Sweden.png" " Sweden" \
+"$APPICON/Switzerland.png" " Switzerland" \
+"$APPICON/Taiwan.png" " Taiwan" \
+"$APPICON/Tajikistan.png" " Tajikistanden" \
+"$APPICON/Tanzania.png" " Tanzania" \
+"$APPICON/Thailand.png" " Thailand" \
+"$APPICON/Tunisia.png" " Tunisia" \
+"$APPICON/Turkey.png" " Turkey" \
+"$APPICON/Ukraine.png" " Ukraine" \
+"$APPICON/United Kingdom.png" " United Kingdom" \
+"$APPICON/United Kingdom.png" " United Kingdom (Cambridge)" \
+"$APPICON/United Kingdom.png" " United Kingdom (York)" \
+"$APPICON/United States of America.png" " United States of America" \
+"$APPICON/United States of America.png" " United States of America (Eastern)" \
+"$APPICON/United States of America.png" " United States of America (Central)" \
+"$APPICON/United States of America.png" " United States of America (Pacific)" \
+"$APPICON/Uzbekistan.png" " Uzbekistan" \
+"$APPICON/Viet Nam.png" " Viet Nam" \
+"$APPICON/Zimbabwe.png" " Zimbabwe")
+
+if [[ "$CHSOURCE" =~ " Argentina" ]]; then
+    cp $LOC/ar/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Argentina, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Armenia" ]]; then
+    cp $LOC/am/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Armenia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Australia" ]]; then
+    cp $LOC/au/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Australia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Australia (Adelaide)" ]]; then
+    cp $LOC/au/ad/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Australia (Adelaide), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Australia (Perth)" ]]; then
+    cp $LOC/au/pe/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Australia (Perth), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Australia (Sydney)" ]]; then
+    cp $LOC/au/sy/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Australia (Sydney, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Austria" ]]; then
+    cp $LOC/at/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Austria, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Azerbaijan" ]]; then
+    cp $LOC/az/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Azerbaijan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Bangladesh" ]]; then
+    cp $LOC/bd/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Bangladesh, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Belarus" ]]; then
+    cp $LOC/by/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Belarus, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Belgium" ]]; then
+    cp $LOC/be/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Belgium, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Bosnia & Herzegovina" ]]; then
+    cp $LOC/ba/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Bosnia & Herzegovina, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Brazil" ]]; then
+    cp $LOC/br/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Brazil, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Bulgaria" ]]; then
+    cp $LOC/bg/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Bulgaria, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Canada" ]]; then
+    cp $LOC/ca/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Canada, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Canada (Ontario)" ]]; then
+    cp $LOC/ca/on/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Canada (Ontario), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Canada (Quebec)" ]]; then
+    cp $LOC/ca/qu/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Canada (Quebec), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Chile" ]]; then
+    cp $LOC/cl/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Chile, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " China" ]]; then
+    cp $LOC/cn/sources.list $APT | zenity --progress --title="$lss" --text="$cs to China, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Colombia" ]]; then
+    cp $LOC/co/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Colombia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Costa Rica" ]]; then
+    cp $LOC/cr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Costa Rica, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Croatia" ]]; then
+    cp $LOC/hr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Croatia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Czech Republic" ]]; then
+    cp $LOC/cz/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Czech Republic, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Denmark" ]]; then
+    cp $LOC/dk/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Denmark, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Ecuador" ]]; then
+    cp $LOC/ec/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Ecuador, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Estonia" ]]; then
+    cp $LOC/ee/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Estonia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Finland" ]]; then
+    cp $LOC/fi/sources.list $APT | zenity --progress --title="$lss" --text="$cs Finland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " France" ]]; then
+    cp $LOC/fr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to France, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " French Polynesia" ]]; then
+    cp $LOC/pf/sources.list $APT | zenity --progress --title="$lss" --text="$cs to French Polynesia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Georgia" ]]; then
+    cp $LOC/ge/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Georgia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Germany" ]]; then
+    cp $LOC/de/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Germany, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Greece" ]]; then
+    cp $LOC/gr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Greece, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Greenland" ]]; then
+    cp $LOC/gl/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Greenland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Hong Kong" ]]; then
+    cp $LOC/hk/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Hong Kong, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Hungary" ]]; then
+    cp $LOC/hu/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Hungary, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Iceland" ]]; then
+    cp $LOC/is/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Iceland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " India" ]]; then
+    cp $LOC/in/sources.list $APT | zenity --progress --title="$lss" --text="$cs to India, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Indonesia" ]]; then
+    cp $LOC/id/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Indonesia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Iran" ]]; then
+    cp $LOC/ir/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Iran, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Ireland" ]]; then
+    cp $LOC/ie/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Ireland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Israel" ]]; then
+    cp $LOC/il/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Israel, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Italy" ]]; then
+    cp $LOC/it/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Italy, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Japan" ]]; then
+    cp $LOC/jp/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Japan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Kazakhstan" ]]; then
+    cp $LOC/kz/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Kazakhstan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Kenya" ]]; then
+    cp $LOC/ke/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Kenya, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Korea" ]]; then
+    cp $LOC/kr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Korea, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Latvia" ]]; then
+    cp $LOC/lv/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Latvia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Lithuania" ]]; then
+    cp $LOC/lt/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Lithuania, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Luxembourg" ]]; then
+    cp $LOC/lu/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Luxembourg, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Macedonia" ]]; then
+    cp $LOC/mk/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Macedonia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Malaysia" ]]; then
+    cp $LOC/my/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Malaysia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Moldova" ]]; then
+    cp $LOC/md/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Moldova, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Nepal" ]]; then
+    cp $LOC/np/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Nepal, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Netherlands" ]]; then
+    cp $LOC/nl/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Netherlands, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " New Caledonia" ]]; then
+    cp $LOC/nc/sources.list $APT | zenity --progress --title="$lss" --text="$cs to New Caledonia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Netherlands" ]]; then
+    cp $LOC/nl/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Netherlands, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " New Zealand" ]]; then
+    cp $LOC/nz/sources.list $APT | zenity --progress --title="$lss" --text="$cs to New Zealand, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Norway" ]]; then
+    cp $LOC/no/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Norway, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Oman" ]]; then
+    cp $LOC/om/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Oman, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Pakistan" ]]; then
+    cp $LOC/pk/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Pakistan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Philippines" ]]; then
+    cp $LOC/ph/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Philippines, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Poland" ]]; then
+    cp $LOC/pl/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Poland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Portugal" ]]; then
+    cp $LOC/pt/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Portugal, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Romania" ]]; then
+    cp $LOC/ro/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Romania, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Russian Federation" ]]; then
+    cp $LOC/ru/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Russian Federation, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Singapore" ]]; then
+    cp $LOC/sg/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Singapore, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Slovakia" ]]; then
+    cp $LOC/sk/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Slovakia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Slovenia" ]]; then
+    cp $LOC/si/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Slovenia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " South Africa" ]]; then
+    cp $LOC/za/sources.list $APT | zenity --progress --title="$lss" --text="$cs to South Africa, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Spain" ]]; then
+    cp $LOC/es/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Spain, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Sweden" ]]; then
+    cp $LOC/se/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Sweden, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Switzerland" ]]; then
+    cp $LOC/ch/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Switzerland, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Taiwan" ]]; then
+    cp $LOC/tw/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Taiwan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Tajikistan" ]]; then
+    cp $LOC/tj/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Tajikistan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Tanzania" ]]; then
+    cp $LOC/tz/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Tanzania, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Thailand" ]]; then
+    cp $LOC/th/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Thailand, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Tunisia" ]]; then
+    cp $LOC/tn/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Tunisia, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Turkey" ]]; then
+    cp $LOC/tr/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Turkey, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Ukraine" ]]; then
+    cp $LOC/ua/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Ukraine, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United Kingdom" ]]; then
+    cp $LOC/gb/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United Kingdom, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United Kingdom (Cambridge)" ]]; then
+    cp $LOC/gb/ca/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United Kingdom (Cambridge), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United Kingdom (York)" ]]; then
+    cp $LOC/gb/yo/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United Kingdom (York), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United States of America" ]]; then
+    cp $LOC/us/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United States of America, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United States of America (Eastern)" ]]; then
+    cp $LOC/us/ea/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United States of America (Eastern), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United States of America (Central)" ]]; then
+    cp $LOC/us/ce/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United States of America (Central), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " United States of America (Pacific)" ]]; then
+    cp $LOC/us/pa/sources.list $APT | zenity --progress --title="$lss" --text="$cs to United States of America (Pacific), please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Uzbekistan" ]]; then
+    cp $LOC/uz/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Uzbekistan, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Viet Nam" ]]; then
+    cp $LOC/vn/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Viet Nam, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+elif [[ "$CHSOURCE" =~ " Zimbabwe" ]]; then
+    cp $LOC/zw/sources.list $APT | zenity --progress --title="$lss" --text="$cs to Zimbabwe, please do not interrupt this operation..." --pulsate --auto-kill --auto-close
+
+            else
+
+                                        zenity --info \
+                                        --title="$lss" --text="The process was interrupted!"
+                        fi
+
+fi
+exit 0
