@@ -1,0 +1,12 @@
+Package: lite-sources
+Version: 2.0-0010-linuxlite
+Essential: no
+Section: base
+Priority: standard
+Installed-Size: 25
+Depends: apt
+Homepage: http://www.linuxliteos.com
+Maintainer: Jerry Bezencon<valtam@linuxliteos.com>
+Architecture: all
+Description: Lite Sources
+ A Country repository source selector for Linux Lite.
