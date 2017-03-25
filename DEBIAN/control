@@ -4,7 +4,7 @@ Essential: no
 Section: base
 Priority: standard
 Installed-Size: 25
-Depends: apt
+Depends: gksu, yad, zenity
 Homepage: http://www.linuxliteos.com
 Maintainer: Jerry Bezencon<valtam@linuxliteos.com>
 Architecture: all
