@@ -1,0 +1,44 @@
+#! /bin/bash
+#
+progress-bar() {
+  local duration=${1}
+    already_done() { for ((done=0; done<$elapsed; done++)); do printf "▇"; done }
+    remaining() { for ((remain=$elapsed; remain<$duration; remain++)); do printf " "; done }
+    percentage() { printf "| %s%%" $(( (($elapsed)*100)/($duration)*100/100 )); }
+    clean_line() { printf "\r"; }
+  for (( elapsed=1; elapsed<=$duration; elapsed++ )); do
+    already_done; remaining; percentage
+    sleep .1
+    clean_line
+  done
+  clean_line
+}
+function status {
+   for i in `cat /tmp/litesourcestemp`
+   do
+     wget -qnv -t2 -T1 --ignore-length --no-proxy --max-redirect=1  --spider ${i}db/version
+        if [ ${?} -ne 0 ]; then
+          echo "Repository: ${i} $(tput setaf 1)TIMED-OUT$(tput sgr0)"
+      else
+      echo "Repository: ${i} $(tput setaf 2)ONLINE$(tput sgr0)"
+    fi
+done
+}
+echo Note:
+echo -----
+printf "Repository mirrors will now be tested. The report shows an 'ONLINE' or 'TIMED-OUT' status for each mirror.\n
+After completing the Repository mirrors status check, make always sure to select \nan 'ONLINE' mirror as close as possible to your location.\n
+If not sure which mirror to use, select an Anycast mirror; that's usually the best option.\nElse, use the default repo located in USA 'http://repo.linuxliteos.com/linuxlite/'.\n
+Be patient while the status check is executing. It might take a while depending on your
+internet connection speed.\n"
+echo
+read -p "Press any key to continue... " -n1 -s
+clear
+echo "Checking mirrors status. Please wait..." & sleep 2
+echo
+progress-bar 25 &
+clear
+echo "Repository mirrors status" ; echo "-------------------------" ; echo &
+echo "$(status)"
+echo
+read -p "Press any key to continue... " -n1 -s

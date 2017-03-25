@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+chown root:root /usr/bin/lite-sources
+chown root:root /usr/share/applications/lite-sources.desktop
+chown root:root /usr/share/liteappsicons/litesources -R
+chown root:root /usr/local/sbin/litesources-repo-check
+chown root:root /usr/local/sbin/repositories
+# Folders and files permissions
+find /usr/share/liteappsicons/ -type d -exec chmod 755 {} \;
+find /usr/share/liteappsicons/ -type f -exec chmod 644 {} \;

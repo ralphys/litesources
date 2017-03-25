@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Lite Sources
+Comment=Select Linux Lite Repository Sources
+Categories=GNOME;GTK;Settings;X-GNOME-Settings-Panel;X-GNOME-PersonalSettings;DesktopSettings;X-XFCE;
+Keywords=Configuration;Profile;User;
+Exec=/usr/bin/lite-sources
+Icon=/usr/share/liteappsicons/litesources/litesources.png
+Terminal=false
+Type=Application
