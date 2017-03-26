@@ -72,7 +72,7 @@ selected=$(yad --list --dclick-action= --title="   $APPNAME" --window-icon=$APPI
 			    --width=720 --height=600 --image=$APPICON --image-on-top --text-align=left \
           --text='\n<span font="Sans 12">         Select a Repository Mirror from the list below</span>\n
   Anycast mirrors provide multiple servers across the world and automatically redirect your \n  requests to the closest mirror to you based on geolocation.\n
-  ⚫ It is strongly recommended to check the Repository mirrors status before switching mirros.\n' \
+  * It is strongly recommended to check the Repository mirrors status before switching mirros.\n' \
           --button=" Check Repos status":2  --button=" Quit"!gtk-quit:1 --button=" Use selected Repo"!gtk-ok:0 \
           --separator= --column="NUM" --column=" Flag :IMG" --column=" Country" --column=" Region" --column=" URL" \
           --hide-column=1 --print-column=1 \
