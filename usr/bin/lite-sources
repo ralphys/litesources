@@ -38,6 +38,7 @@ gra="http://ftp.cc.uoc.gr/mirrors/linux/linuxlite/"
 ita="http://linuxlite.lbit-solution.it/"
 lua="http://mirror.unlockforus.com/linuxlite/"
 nca="http://mirror.lagoon.nc/pub/linuxlite/"
+sea="http://ftp.acc.umu.se/mirror/linuxliteos.com/"
 twa="http://ftp.yzu.edu.tw/Linux/linuxlite/"
 tha="http://mirror.adminbannok.com/linuxlite/"
 vna="https://mirror.freedif.org/LinuxLiteOS/"
@@ -135,6 +136,9 @@ elif [ "$selected" == "ita" ]; then
 elif [ "$selected" == "nca" ]; then
 		echo "deb $nca $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $nca"
+elif [ "$selected" == "sea" ]; then
+		echo "deb $sea $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
+		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $sea"	
 elif [ "$selected" == "twa" ]; then
 		echo "deb $twa $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $twa"
