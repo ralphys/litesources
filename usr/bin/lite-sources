@@ -57,8 +57,8 @@ elif [ "$RELNUM" == "4"  ]; then
 fi
 
 # start splash
-yad --width=400 --height=20 --info --on-top --skip-taskbar --undecorated --no-buttons --timeout=1 \
- 		--text-align=center --text='\n\n\n\n<span font="Sans 14">Loading Lite Repositories</span>\n<span font="Sans 11"> \nplease wait...\n</span>' &&
+yad --width=400 --height=20 --info --skip-taskbar --undecorated --no-buttons --timeout=1 \
+ 		--text-align=center --text='\n\n\n\n<span font="Sans 14">Loading Lite Repositories</span>\n<span font="Sans 11"> \nplease wait...\n</span>' & sleep .7
 
 # create main dialog from repositories.txt file
 items=()
@@ -138,7 +138,7 @@ elif [ "$selected" == "nca" ]; then
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $nca"
 elif [ "$selected" == "sea" ]; then
 		echo "deb $sea $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $sea"	
+		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $sea"
 elif [ "$selected" == "twa" ]; then
 		echo "deb $twa $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $twa"
