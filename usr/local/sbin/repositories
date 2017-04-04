@@ -6,6 +6,8 @@ ecc|EC|Ecuador (Ambato)|South America|http://mirror.uta.edu.ec/linuxliteos/
 ecd|EC|Ecuador (Riobamba)|South America|http://mirror.espoch.edu.ec/linuxliteos/
 enga|ENG|England|United Kingdom|http://www.mirrorservice.org/sites/repo.linuxliteos.com/linuxlite/
 fra|FR|France|Europe|http://linuxlite.3load.com/
+dea|DE|Germany|Europe|https://linuxliteos-mirror-a.alpix.eu/
+deb|DE|Germany|Europe|http://linuxliteos-mirror-a.alpix.eu/
 gra|GR|Greece|Europe|http://ftp.cc.uoc.gr/mirrors/linux/linuxlite/
 ita|IT|Italy|Europe|http://linuxlite.lbit-solution.it/
 lua|LU|Luxembourg|Europe|http://mirror.unlockforus.com/linuxlite/
