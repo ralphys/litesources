@@ -67,7 +67,7 @@ items=()
 while IFS='|' read -r num flag country region url _; do
     items+=( "$num" "$APPFLAG/$flag.png" "  $country " "  $region" "  $url" )
 		echo $url >> $TRF
-done < <(sort -t'|' -k1 /usr/local/sbin/repositories)
+done < <(sort -t'|' -k3 /usr/local/sbin/repositories)
 
 # show main dialog
 function mirrors {
