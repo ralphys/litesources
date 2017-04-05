@@ -34,6 +34,8 @@ ecc="http://mirror.uta.edu.ec/linuxliteos/"
 ecd="http://mirror.espoch.edu.ec/linuxliteos/"
 enga="http://www.mirrorservice.org/sites/repo.linuxliteos.com/linuxlite/"
 fra="http://linuxlite.3load.com/"
+dea="https://linuxliteos-mirror-a.alpix.eu/"
+deb="http://linuxliteos-mirror-a.alpix.eu/"
 gra="http://ftp.cc.uoc.gr/mirrors/linux/linuxlite/"
 ita="http://linuxlite.lbit-solution.it/"
 lua="http://mirror.unlockforus.com/linuxlite/"
@@ -127,6 +129,12 @@ elif [ "$selected" == "enga" ]; then
 elif [ "$selected" == "fra" ]; then
 		echo "deb $fra $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $fra"
+elif [ "$selected" == "dea" ]; then
+		echo "deb $dea $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
+		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $dea"
+elif [ "$selected" == "deb" ]; then
+		echo "deb $deb $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
+		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $deb"
 elif [ "$selected" == "gra" ]; then
 		echo "deb $gra $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
 		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $gra"
