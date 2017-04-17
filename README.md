@@ -11,6 +11,6 @@ Select Linux Lite Repository Sources
 
 This project is under the GPLv2 license. Unless otherwise stated in individual files.
 
-##Authors
+## Authors
 - [Ralphy](https://github.com/ralphys)
 - [Jerry Bezencon](https://github.com/linuxlite/)
