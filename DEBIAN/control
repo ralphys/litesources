@@ -6,7 +6,7 @@ Priority: standard
 Installed-Size: 25
 Depends: gksu, yad, zenity
 Homepage: http://www.linuxliteos.com
-Maintainer: Jerry Bezencon<valtam@linuxliteos.com>
+Maintainer: Jerry Bezencon <valtam@linuxliteos.com>
 Architecture: all
 Description: Lite Sources
  A Country repository source selector for Linux Lite.
