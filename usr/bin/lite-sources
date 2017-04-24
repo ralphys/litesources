@@ -6,25 +6,18 @@
 # Website: https://www.linuxliteos.com
 #--------------------------------------------------------------------------------------------------------
 # application icon
-APPICON=/usr/share/liteappsicons/litesources/lite-repo.png
+_APPICON="/usr/share/liteappsicons/litesources/lite-repo.png"
 # flags folder
-APPFLAG=/usr/share/liteappsicons/litesources/flags/
-APPNAME="   Lite Sources"
+_APPFLAG="/usr/share/liteappsicons/litesources/flags/"
+_APPNAME=" Lite Sources"
+_SLIST="/etc/apt/sources.list.d/linuxlite.list"
 TRF="/tmp/litesourcestemp"
 
-if [ $EUID -ne 0 ]; then
-    gksu -m '
-  <b>Lite Sources requires Administrative privileges  </b>
-
-
-         Please enter your password to continue.' bash $0
-         exit
-     else :
-  fi
+if [ $EUID -ne 0 ]; then pkexec $0; exit 0; if [ "${PIPESTATUS[@]}" -eq "126" ]; then exit 0 ; fi; else :; fi
 
 # the loop
 while (true); do
-    test -e [$TRF] || rm -f $TRF
+    test -e ["$TRF"] || rm -f "$TRF"
 # repositories
 aaa="http://mirror.unlockforus.com/linuxlite/"
 bra="http://sft.if.usp.br/linuxlite/"
@@ -65,18 +58,18 @@ yad --width=400 --height=20 --info --skip-taskbar --undecorated --no-buttons --t
 # create main dialog from repositories.txt file
 items=()
 while IFS='|' read -r num flag country region url _; do
-    items+=( "$num" "$APPFLAG/$flag.png" "  $country " "  $region" "  $url" )
+    items+=( "$num" "$_APPFLAG/$flag.png" "  $country " "  $region" "  $url" )
 		echo $url >> $TRF
 done < <(sort -t'|' -k3 /usr/local/sbin/repositories)
 
 # show main dialog
 function mirrors {
-selected=$(yad --list --dclick-action= --title="   $APPNAME" --window-icon=$APPICON --fixed --always-print-result \
-			    --width=720 --height=600 --image=$APPICON --image-on-top --text-align=left \
+selected=$(yad --list --dclick-action= --title="   $_APPNAME" --window-icon=$_APPICON --fixed --always-print-result \
+			    --width=720 --height=600 --image=$_APPICON --image-on-top --text-align=left \
           --text='\n<span font="Sans 12">         Select a Repository Mirror from the list below</span>\n
   Anycast mirrors provide multiple servers across the world and automatically redirect your \n  requests to the closest mirror to you based on geolocation.\n
   * It is strongly recommended to check the Repository mirrors status before switching mirros.\n' \
-          --button=" Check Repos status":2  --button=" Quit"!gtk-quit:1 --button=" Use selected Repo"!gtk-ok:0 \
+          --button=" Check Repos status"!gtk-execute:2  --button=" Quit"!gtk-quit:1 --button=" Use selected Repo"!gtk-ok:0 \
           --separator= --column="NUM" --column=" Flag :IMG" --column=" Country" --column=" Region" --column=" URL" \
           --hide-column=1 --print-column=1 \
           "${items[@]}" )
@@ -84,83 +77,142 @@ opt=$?
 # main window buttons
 # exit on button QUIT
 if [[ "$opt" -eq "1" ]]; then
-  rm -f $TRF & exit
+  rm -f "$TRF" & exit
 fi
 # execute repo check (status.sh)
 if [[ "$opt" -eq "2" ]]; then
   xterm -geometry 94x28 -fa monaco -fs 13 -title "Lite Repository Mirrors - Status" -e "/usr/local/sbin/litesources-repo-check"
-  rm -f $TRF && bash $0
+  rm -f "$TRF" && bash $0
   exit
 fi
 # exit on button X
 if [[ "$opt" -eq "252" ]]; then
-  rm -f $TRF
+  rm -f "$TRF"
   exit
 fi
 }
+
 # call main dialog function on execution
 mirrors
-# switch mirror splash
-yad --width=400 --info --on-top --skip-taskbar --undecorated --no-buttons --timeout=1 --timeout-indicator=bottom --text-align=center \
-		--text='\n\n\n<span font="Sans 12"> Switching mirror. Please wait...</span>\n' && sleep 2
+# update cache after switching mirror
+update_cache() {
+  yad --width=400 --info --on-top --skip-taskbar --undecorated --no-buttons --timeout=1 --timeout-indicator=bottom --text-align=center \
+  		--text='\n\n\n<span font="Sans 12"> Switching mirror. Please wait...</span>\n'
+
+  apt-get update | stdbuf -oL sed -n -e '/\[*$/ s/^/# /p' -e '/\*$/ s/^/# /p' | yad --width=650 --progress --pulsate --on-top --skip-taskbar --undecorated --no-buttons \
+    --auto-close --text-align=center --text='\n\n\n<span font="Sans 12"> Updating cache. Please wait...</span>\n'
+  if [ "${PIPESTATUS[0]}" -ne "0" ]; then
+    zenity --info --title="  $_APPNAME - Info" --width="390" --height="60" --ok-label="Close" \
+           --text="\n$_APPNAME was unable to update the cache.\nThis may just be a temporary connectivity issues with the update server." 2>/dev/null
+  fi
+}
+# don't switch repo message
+#no_switch() {
+#  zenity --info --title="  $_APPNAME - Info" --width="390" --height="60" --ok-label="Close" \
+#         --text="\nThe selected mirror is already the default. No changes needed." 2>/dev/null
+#}
+
+no_switch() {
+  yad --info --skip-taskbar --title="" --fixed --button="Close"\!gtk-close:0 --borders=10 --width="390" --height="60" --ok-label="Close" --image-on-top \
+      --image="/usr/share/liteappsicons/litesources/lite-repo48.png" --text="\nThe selected mirror is already the default. No changes needed.\n"
+}
 
 # switch mirrors
 if [[ "$selected" == "aaa" || "$selected" == "lua" || "$selected" == "usa" || "$selected" == "usb" ]]; then
-			echo "deb $aaa $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-			zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $aaa"
+  if grep -q -F "$aaa" "$_SLIST"; then no_switch; else
+		echo "deb $aaa $rel_version main" > "$_SLIST"
+		update_cache;  zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$aaa" 2>/dev/null
+  fi
 elif [ "$selected" == "bra" ]; then
-			echo "deb $bra $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-			zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $bra"
+  if grep -q -F "$bra" "$_SLIST"; then no_switch; else
+		echo "deb $bra $rel_version main" > "$_SLIST"
+		update_cache;  zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$bra" 2>/dev/null
+  fi
 elif [ "$selected" == "eca" ]; then
-		echo "deb $eca $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $eca"
+  if grep -q -F "$eca" "$_SLIST"; then no_switch; else
+		echo "deb $eca $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$eca" 2>/dev/null
+  fi
 elif [ "$selected" == "ecb" ]; then
-		echo "deb $ecb $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $ecb"
+  if grep -q -F "$ecb" "$_SLIST"; then no_switch; else
+    echo "deb $ecb $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$ecb" 2>/dev/null
+  fi
 elif [ "$selected" == "ecc" ]; then
-		echo "deb $ecc $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $ecc"
+  if grep -q -F "$ecc" "$_SLIST"; then no_switch; else
+		echo "deb $ecc $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$ecc" 2>/dev/null
+  fi
 elif [ "$selected" == "ecd" ]; then
-		echo "deb $ecd $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $ecd"
+  if grep -q -F "$ecd" "$_SLIST"; then no_switch; else
+    echo "deb $ecd $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$ecd" 2>/dev/null
+  fi
 elif [ "$selected" == "enga" ]; then
-		echo "deb $enga $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $enga"
+  if grep -q -F "$enga" "$_SLIST"; then no_switch; else
+    echo "deb $enga $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$enga" 2>/dev/null
+  fi
 elif [ "$selected" == "fra" ]; then
-		echo "deb $fra $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $fra"
+  if grep -q -F "$fra" "$_SLIST"; then no_switch; else
+    echo "deb $fra $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$fra" 2>/dev/null
+  fi
 elif [ "$selected" == "dea" ]; then
-		echo "deb $dea $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $dea"
+  if grep -q -F "$dea" "$_SLIST"; then no_switch; else
+    echo "deb $dea $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$dea" 2>/dev/null
+  fi
 elif [ "$selected" == "deb" ]; then
-		echo "deb $deb $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $deb"
+  if grep -q -F "$deb" "$_SLIST"; then no_switch; else
+    echo "deb $deb $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$deb" 2>/dev/null
+  fi
 elif [ "$selected" == "gra" ]; then
-		echo "deb $gra $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $gra"
+  if grep -q -F "$gra" "$_SLIST"; then no_switch; else
+    echo "deb $gra $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$gra" 2>/dev/null
+  fi
 elif [ "$selected" == "ita" ]; then
-		echo "deb $ita $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $ita"
+  if grep -q -F "$ita" "$_SLIST"; then no_switch; else
+    echo "deb $ita $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$ita" 2>/dev/null
+  fi
 elif [ "$selected" == "nca" ]; then
-		echo "deb $nca $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $nca"
+  if grep -q -F "$nca" "$_SLIST"; then no_switch; else
+    echo "deb $nca $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$nca" 2>/dev/null
+  fi
 elif [ "$selected" == "sea" ]; then
-		echo "deb $sea $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $sea"
+  if grep -q -F "$sea" "$_SLIST"; then no_switch; else
+    echo "deb $sea $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$sea" 2>/dev/null
+  fi
 elif [ "$selected" == "twa" ]; then
-		echo "deb $twa $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $twa"
+  if grep -q -F "$twa" "$_SLIST"; then no_switch; else
+    echo "deb $twa $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$twa" 2>/dev/null
+  fi
 elif [ "$selected" == "tha" ]; then
-		echo "deb $tha $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $tha"
+  if grep -q -F "$tha" "$_SLIST"; then no_switch; else
+    echo "deb $tha $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$tha" 2>/dev/null
+  fi
 elif [ "$selected" == "vna" ]; then
-		echo "deb $vna $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $vna"
+  if grep -q -F "$vna" "$_SLIST"; then no_switch; else
+    echo "deb $vna $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$vna" 2>/dev/null
+  fi
 elif [ "$selected" == "usc" ]; then
-		echo "deb $usc $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $usc"
+  if grep -q -F "$usc" "$_SLIST"; then no_switch; else
+    echo "deb $usc $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$usc" 2>/dev/null
+  fi
 elif [ "$selected" == "usd" ]; then
-		echo "deb $usd $rel_version main" > /etc/apt/sources.list.d/linuxlite.list
-		zenity --info --title="  $APPNAME - Info" --width="390" --height="60" --text="\n Linux Lite repository mirror has been changed to:     \n\n $usd"
+  if grep -q -F "$usd" "$_SLIST"; then no_switch; else
+    echo "deb $usd $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$usd" 2>/dev/null
+  fi
 fi
 done
+exit 0
