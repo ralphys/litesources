@@ -29,6 +29,7 @@ enga="http://www.mirrorservice.org/sites/repo.linuxliteos.com/linuxlite/"
 fra="http://linuxlite.3load.com/"
 dea="https://linuxliteos-mirror-a.alpix.eu/"
 deb="http://linuxliteos-mirror-a.alpix.eu/"
+dec="http://babyname.tips/mirrors/linuxlite/"
 gra="http://ftp.cc.uoc.gr/mirrors/linux/linuxlite/"
 ita="http://linuxlite.lbit-solution.it/"
 lua="http://mirror.unlockforus.com/linuxlite/"
@@ -167,6 +168,11 @@ elif [ "$selected" == "deb" ]; then
   if grep -q -F "$deb" "$_SLIST"; then no_switch; else
     echo "deb $deb $rel_version main" > "$_SLIST"
 		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$deb" 2>/dev/null
+  fi
+elif [ "$selected" == "dec" ]; then
+  if grep -q -F "$dec" "$_SLIST"; then no_switch; else
+    echo "deb $dec $rel_version main" > "$_SLIST"
+		update_cache; zenity --info --title="  $_APPNAME - Info" --width="320" --height="60" --text="\nLinux Lite repository mirror has been changed to: \n\n$dec" 2>/dev/null
   fi
 elif [ "$selected" == "gra" ]; then
   if grep -q -F "$gra" "$_SLIST"; then no_switch; else
